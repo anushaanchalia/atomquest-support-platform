@@ -111,18 +111,12 @@ app.delete('/api/sessions/:id', async (req, res) => {
     await db.run('UPDATE sessions SET status = ?, endedAt = CURRENT_TIMESTAMP WHERE id = ?', ['ended', req.params.id]);
     
     io.to(req.params.id).emit('session-ended');
-    const room = io.sockets.adapter.rooms.get(req.params.id);
-    if (room) {
-      for (const socketId of room) {
-        const socket = io.sockets.sockets.get(socketId);
-        if (socket) socket.leave(req.params.id);
-      }
-    }
+    io.in(req.params.id).socketsLeave(req.params.id);
     
     res.json({ success: true });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Failed to end session' });
+    res.status(500).json({ error: err.message || 'Failed to end session' });
   }
 });
 

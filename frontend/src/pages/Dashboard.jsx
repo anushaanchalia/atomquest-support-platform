@@ -49,16 +49,19 @@ export default function Dashboard() {
   };
 
   const forceEndSession = async (sessionId) => {
-    if (!window.confirm('Are you sure you want to forcibly end this session for all participants?')) return;
     try {
       const res = await fetch(`http://localhost:3000/api/sessions/${sessionId}`, {
         method: 'DELETE'
       });
       if (res.ok) {
         setSessions(prev => prev.map(s => s.id === sessionId ? { ...s, status: 'ended', endedAt: new Date().toISOString() } : s));
+      } else {
+        const data = await res.json();
+        alert(`Failed to end session: ${data.error}`);
       }
     } catch (err) {
       console.error('Failed to end session', err);
+      alert(`Network error: Could not contact backend to end session.`);
     }
   };
 
